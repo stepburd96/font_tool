@@ -1,0 +1,18 @@
+{
+  "name": "font_tool-node",
+  "version": "1.0.0",
+  "description": "Adjusts metadata to meet Movable Ink font_uploader requirements",
+  "main": "index.js",
+  "scripts": {
+    "test": "font_clean_node"
+  },
+  "repository": {
+    "type": "git",
+    "url": "font_clean_node"
+  },
+  "author": "Stephen Burden",
+  "license": "MIT",
+  "dependencies": {
+    "fonteditor-core": "^2.1.11"
+  }
+}
