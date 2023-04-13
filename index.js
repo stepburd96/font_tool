@@ -8,14 +8,13 @@
 //test slowly
 //try to pass command line arguments to node js program
 
-const f = require("fonteditor-core");
+const fk = require("fontkit");
 const fs = require("fs");
 const os = require("os");
 
 //Temp Report Data Structures to pass at end of process
 //possibly setup a logs system that outputs errors to a txt file
 
-let failedFilesLog = [];
 let fontStaging = [];
 let cleanedFontsLog = [];
 
@@ -34,11 +33,14 @@ function main(path = "./test-fonts") {
   return fs.opendir(path, { encoding: "utf8", bufferSize: 64 }, (err, dir) => {
     let path = dir.path;
     fs.readdir(path, (err, files) => {
-        //We got to the actual font files (hopefully), lets start validating
-        //I might want to do this somewhere else
-        files = fontOpeningValidation(files)
+        const { acceptedFiles = [] , failedFiles = [] } = fontOpeningValidation(files);
+        // meta -> sfnt -> filename
+        console.log('path', path)
+        const cleanMetaFonts =  acceptedFiles.map((file) => {
+            const fontStage = fontMetaRevision(path + "/" + file);
+            return fontStage
+        });
 
-        console.log('post filter files: ', files)
     });
     console.log("Closing the directory");
     dir.closeSync();
@@ -47,11 +49,9 @@ function main(path = "./test-fonts") {
 
 function fontOpeningValidation(files) {
     //Filters out every file that isn't in the accepted file type list
-    //Return a Bool
-
-
+    //Return an object of arrays. Failed and Accepted Files listed by font file name as it appears in the directory
     const acceptedFileTypes = [".otf", ".ttf"];
-    files = files.filter( (file) => {
+    const acceptedFiles = files.filter( (file) => {
 
         //Take the list of approved file types and compare it against the file. The resulting array will be the extension that was matched. 
         //I could probably do this the other way around but this seems concise enough so I will leave it as is
@@ -66,20 +66,48 @@ function fontOpeningValidation(files) {
         return length > 0
     });
 
-    failedFilesLog = files.filter( (file) => {
+
+    //Could probably condense both of these down into one function
+    const failedFiles = files.filter( (file) => {
         const length = acceptedFileTypes.filter( (ext) => {
             return file.includes(ext)
         });
+
+        return length == 0
     });
 
 
     //return only the file names that pass the accepted file types test
-    return files
+    return { acceptedFiles, failedFiles } 
 }
 
-function fontMetaRevision(file) {}
+//stuck
 
-function fontSFNTRevision(file) {}
+function fontMetaRevision(file) {
+    //meta fields to be cleaned up
+    const metaFields = ["postScriptName", "fullName", "familyName", "subfamilyName", "version"]
+
+    let font = fk.openSync(file); //synchronous, don't need async await
+    const cleanedMetaFont = metaFields.forEach((field) => {
+        let { [field] : meta = "" } = font
+        switch(meta) {
+            case "" :
+                return ""
+            case "version" :
+                meta = ""
+            default :
+                meta = meta.replace(/^a-zA-Z0-9./, "");
+                file[field] = meta
+        }
+    });
+
+    console.log('cleanedMetaFont', cleanedMetaFont)
+    
+    return cleanedMetaFont
+}
+
+//NOT sfnt
+function fontTTFRevision(file) {}
 
 function fontFileNameRevision(file) {}
 
