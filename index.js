@@ -4,11 +4,11 @@
 
 */
 
-(function main(path = "./test-fonts") {
+const fk = require("fontkit");
+const fs = require("fs");
+const os = require("os");
 
-    const fk = require("fontkit");
-    const fs = require("fs");
-    const os = require("os");
+(function main(path = "./test-fonts") {
 
     let fontStaging = [];
     let cleanedFontsLog = [];
