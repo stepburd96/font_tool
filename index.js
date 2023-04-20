@@ -35,19 +35,12 @@
             let font = fk.openSync(path + "/" + file); 
             let fontStage = await fontMetaRevision(font, metaFields);
             fontStage = await fontTTFRevision(font, metaFields)
+            fontStage = fontFileNameRevision(file)
             return fontStage
         });
     });
 
 })();
-
-function changeDir(path) {
-    process.chdir(path);
-}
-
-function getUsersHomeDir() {
-    return os.homedir();
-}
 
 function fontOpeningValidation(files) {
     //Filters out every file that isn't in the accepted file type list
@@ -106,7 +99,6 @@ function fontMetaRevision(font, metaFields) {
 
 }
 
-//NOT sfnt
 function fontTTFRevision(font, metaFields) {
     //Use this function to delete erraneous fields - these correspond to FontForges TTF names 
 
@@ -123,5 +115,8 @@ function fontTTFRevision(font, metaFields) {
 
 }
 
-function fontFileNameRevision(file) {}
+function fontFileNameRevision(file) {
+
+
+}
 
