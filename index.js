@@ -4,7 +4,7 @@
 
 */
 
-function main(path = "./test-fonts") {
+(function main(path = "./test-fonts") {
 
     const fk = require("fontkit");
     const fs = require("fs");
@@ -20,7 +20,7 @@ function main(path = "./test-fonts") {
     // node [entry] [arg1] [arg2] [arg3]
     // [ 'stephen', 'allen' ]
     const args = process.argv.slice(2); 
-    const metaFields = ["fullName", "fontFamily", "preferredFamily", "version", "preferredSubfamily"] //preferredSubfamily == weight
+    const metaFields = ["fullName", "fontFamily", "preferredFamily", "preferredSubfamily"] //preferredSubfamily == weight
 
     const dskDirtyDir = "Desktop/fonts";
     const dskCleanDir = "Desktop/processed-fonts";
@@ -34,11 +34,12 @@ function main(path = "./test-fonts") {
         const cleanMetaFonts =  acceptedFiles.map(async (file) => {
             let font = fk.openSync(path + "/" + file); 
             let fontStage = await fontMetaRevision(font, metaFields);
+            fontStage = await fontTTFRevision(font, metaFields)
             return fontStage
         });
     });
 
-}
+})();
 
 function changeDir(path) {
     process.chdir(path);
@@ -81,7 +82,6 @@ function fontOpeningValidation(files) {
     return { acceptedFiles, failedFiles } 
 }
 
-//stuck
 
 function fontMetaRevision(font, metaFields) {
     //Clean up non-alphanumeric characters in the fields
@@ -93,32 +93,35 @@ function fontMetaRevision(font, metaFields) {
         const { name : { records } } = font
         let { [field] : meta = "" } = records
         let { en : stage } = meta
-        // const stageFlat = field == "version" ? stage.toLowerCase() : stage;
-        // const switchExpression = stageFlat.includes("version");
         switch(stage) {
             case undefined :
                 return 
-            // case true :
-            //     //fontforge could not do this
-            //     delete font.name.records[metaFields[i]].en //opens up original font and deletes the version property
             default :
                 stage = stage.replace(re, "")
                 font.name.records[metaFields[i]].en = stage
         }
     }
 
-
     return font
 
 }
 
 //NOT sfnt
-function fontTTFRevision(file) {
+function fontTTFRevision(font, metaFields) {
     //Use this function to delete erraneous fields - these correspond to FontForges TTF names 
 
+    const { name : { records } } = font
+    for (const key in records) {
+
+        if (!metaFields.includes(key)) {
+            delete font.name.records[key]
+        }
+        
+    }
+
+    return font
 
 }
 
 function fontFileNameRevision(file) {}
 
-main();
