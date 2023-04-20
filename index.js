@@ -33,7 +33,7 @@ function main(path = "./test-fonts") {
         const { acceptedFiles = [] , failedFiles = [] } = await fontOpeningValidation(files);
         const cleanMetaFonts =  acceptedFiles.map(async (file) => {
             let font = fk.openSync(path + "/" + file); 
-            let fontStage = await fontMetaRevision(font);
+            let fontStage = await fontMetaRevision(font, metaFields);
             return fontStage
         });
     });
@@ -83,7 +83,7 @@ function fontOpeningValidation(files) {
 
 //stuck
 
-function fontMetaRevision(file) {
+function fontMetaRevision(font, metaFields) {
     //Clean up non-alphanumeric characters in the fields
 
     for (let i = 0; i < metaFields.length; i++) {
