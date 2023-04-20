@@ -4,53 +4,36 @@
 
 */
 
-//slowly import line by line and check for errors
-//test slowly
-//try to pass command line arguments to node js program
-
-const fk = require("fontkit");
-const fs = require("fs");
-const os = require("os");
-
-//Temp Report Data Structures to pass at end of process
-//possibly setup a logs system that outputs errors to a txt file
-
-let fontStaging = [];
-let cleanedFontsLog = [];
-
-//adds arguments to an array
-// node [entry] [arg1] [arg2] [arg3]
-// [ 'stephen', 'allen' ]
-const args = process.argv.slice(2);
-
-const dskDirtyDir = "Desktop/fonts";
-const dskCleanDir = "Desktop/processed-fonts";
-const userHomeDir = os.homedir();
-let fontSrcDir = args[0];
-fontSrcDir = `${userHomeDir}/${dskDirtyDir}/${fontSrcDir}/`;
-
 function main(path = "./test-fonts") {
-//   return fs.opendir(path, { encoding: "utf8", bufferSize: 64 }, (err, dir) => {
-//     let path = dir.path;
-//     fs.readdir(path, async (err, files) => { //probably using a for each loop which cannot use async/await
-//         const { acceptedFiles = [] , failedFiles = [] } = await fontOpeningValidation(files);
-//         // meta -> ttf names -> filename
-//         console.log('path', path)
-//         return 
-//         const cleanMetaFonts =  acceptedFiles.map((file) => {
-//             const fontStage = fontMetaRevision(path + "/" + file);
-//             return fontStage
-//         });
 
-//     });
-//     console.log("Closing the directory");
-//     dir.closeSync();
-//   });
+    const fk = require("fontkit");
+    const fs = require("fs");
+    const os = require("os");
+
+    //Temp Report Data Structures to pass at end of process
+    //possibly setup a logs system that outputs errors to a txt file
+
+    let fontStaging = [];
+    let cleanedFontsLog = [];
+
+    //adds arguments to an array
+    // node [entry] [arg1] [arg2] [arg3]
+    // [ 'stephen', 'allen' ]
+    const args = process.argv.slice(2); 
+    const metaFields = ["fullName", "fontFamily", "preferredFamily", "version", "preferredSubfamily"] //preferredSubfamily == weight
+
+    const dskDirtyDir = "Desktop/fonts";
+    const dskCleanDir = "Desktop/processed-fonts";
+    const userHomeDir = os.homedir();
+    let fontSrcDir = args[0];
+    fontSrcDir = `${userHomeDir}/${dskDirtyDir}/${fontSrcDir}/`;
+
 
     fs.readdir(path, async (err, files) => {
         const { acceptedFiles = [] , failedFiles = [] } = await fontOpeningValidation(files);
         const cleanMetaFonts =  acceptedFiles.map(async (file) => {
-            const fontStage = await fontMetaRevision(path + "/" + file);
+            let font = fk.openSync(path + "/" + file); 
+            let fontStage = await fontMetaRevision(font);
             return fontStage
         });
     });
@@ -101,11 +84,7 @@ function fontOpeningValidation(files) {
 //stuck
 
 function fontMetaRevision(file) {
-    //meta fields to be cleaned up
-    //preferredSubfamily == weight
-    const metaFields = ["fullName", "fontFamily", "preferredFamily", "version", "preferredSubfamily"]
-
-    let font = fk.openSync(file); //synchronous, don't need async await
+    //Clean up non-alphanumeric characters in the fields
 
     for (let i = 0; i < metaFields.length; i++) {
         let field = metaFields[i]
@@ -114,14 +93,14 @@ function fontMetaRevision(file) {
         const { name : { records } } = font
         let { [field] : meta = "" } = records
         let { en : stage } = meta
-        const stageFlat = field == "version" ? stage.toLowerCase() : stage;
-        const switchExpression = stageFlat.includes("version");
-        switch(switchExpression) {
+        // const stageFlat = field == "version" ? stage.toLowerCase() : stage;
+        // const switchExpression = stageFlat.includes("version");
+        switch(stage) {
             case undefined :
                 return 
-            case true :
-                //fontforge could not do this
-                delete font.name.records[metaFields[i]].en //opens up original font and deletes the version property
+            // case true :
+            //     //fontforge could not do this
+            //     delete font.name.records[metaFields[i]].en //opens up original font and deletes the version property
             default :
                 stage = stage.replace(re, "")
                 font.name.records[metaFields[i]].en = stage
@@ -134,7 +113,11 @@ function fontMetaRevision(file) {
 }
 
 //NOT sfnt
-function fontTTFRevision(file) {}
+function fontTTFRevision(file) {
+    //Use this function to delete erraneous fields - these correspond to FontForges TTF names 
+
+
+}
 
 function fontFileNameRevision(file) {}
 
