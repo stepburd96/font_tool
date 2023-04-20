@@ -32,10 +32,14 @@
     fs.readdir(path, async (err, files) => {
         const { acceptedFiles = [] , failedFiles = [] } = await fontOpeningValidation(files);
         const cleanMetaFonts =  acceptedFiles.map(async (file) => {
-            let font = fk.openSync(path + "/" + file); 
+            const filePath = path + "/" + file
+            let font = fk.openSync(filePath); 
             let fontStage = await fontMetaRevision(font, metaFields);
             fontStage = await fontTTFRevision(font, metaFields)
-            fontStage = fontFileNameRevision(file)
+            fontStage = await fontFileNameRevision(path, filePath, font)
+            const fontBuffer = font.stream.buffer
+            fk.create(fontBuffer)
+            
             return fontStage
         });
     });
@@ -74,7 +78,6 @@ function fontOpeningValidation(files) {
     //return only the file names that pass the accepted file types test
     return { acceptedFiles, failedFiles } 
 }
-
 
 function fontMetaRevision(font, metaFields) {
     //Clean up non-alphanumeric characters in the fields
@@ -115,8 +118,14 @@ function fontTTFRevision(font, metaFields) {
 
 }
 
-function fontFileNameRevision(file) {
+function fontFileNameRevision(path , filePath, font) {
 
+    const fs = require("fs");
+    const { name : { records } } = font
+    const { fullName : { en : fontName } } = records
 
+    fs.rename(filePath, `${path}/${fontName}.ttf`, () => {
+        return
+    })
 }
 
